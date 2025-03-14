@@ -17,7 +17,16 @@ services:
     depends_on:
       - mongodb
     environment:
+      - PORT=3000
       - MONGODB_URI=mongodb://mongodb:27017/pets
+      - DD_ENV=development
+      - DD_SERVICE=pet-management-api
+      - DD_VERSION=1.0.0
+      - DD_LOGS_INJECTION=true
+      - DD_TRACE_SAMPLE_RATE=1
+      - DD_PROFILING_ENABLED=true
+      - DD_AGENT_HOST=datadog-agent
+      - DD_TRACE_AGENT_PORT=8126
 
   mongodb:
     image: mongo:latest
@@ -25,6 +34,31 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+
+  datadog-agent:
+    image: datadog/agent:latest
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_ENV="pet-management-app"
+      - DD_LOGS_INJECTION=true
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      - DD_LOGS_ENABLED=true
+      - DD_LOG_LEVEL=trace
+      - DD_DOGSTATSD_PORT=8125
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+      - DD_DOGSTATSD_ORIGIN_DETECTION=true
+      - DD_PROCESS_AGENT_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      - DD_AC_EXCLUDE="name:datadog-agent"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    ports:
+      - "8126:8126/tcp"
+      - "8127:8125/udp"
 
 volumes:
   mongodb_data:
